@@ -1,0 +1,148 @@
+import random
+
+# Game Constants
+GRID_SIZE = 5   # Size of the grid set to a 5x5 grid, smaller for simplicity
+SHIP_COUNT = 5  # Number of ships each player has
+OBSTACLE_COUNT = 3  # Number of obstacles placed on each board
+
+# Function to print the board
+def print_board(board, reveal=False):
+    """Print the current state of the board, hiding ships and obstacles unless they are revealed."""
+    print("  0 1 2 3 4")  # Column headers set for grid
+    for row in range(GRID_SIZE):
+        display_row = []
+        for cell in board[row]:
+            if cell in {"S", "O"} and not reveal:  # Hide ships ('S') and obstacles ('O') if reveal is False
+                display_row.append(".")  # Show hidden cells as "."
+            else:
+                display_row.append(cell)  # Show actual cell contents if revealed or if it's a hit/miss
+        print(f"{row} " + " ".join(display_row))
+    print()  # Extra newline for readability
+
+# Function to generate a random row and column on the grid
+def generate_random_position():
+    """Generate a random row and column within the grid."""
+    return random.randint(0, GRID_SIZE - 1), random.randint(0, GRID_SIZE - 1)
+
+# Function to place ships randomly on the board
+def place_ships(board):
+    """Place the ships randomly on the board."""
+    ships = set()  # Track ship positions in a set to avoid duplicates
+    while len(ships) < SHIP_COUNT:
+        row, col = generate_random_position()
+        if (row, col) not in ships:
+            ships.add((row, col))  # Add ship location to set
+            board[row][col] = "S"  # Mark ship positions with "S"
+    return ships  # Return set of ship positions
+
+# Function to place obstacles randomly on the board
+def place_obstacles(board):
+    """Place obstacles randomly on the board."""
+    obstacles = set()  # Track obstacle positions in a set to avoid duplicates
+    while len(obstacles) < OBSTACLE_COUNT:
+        row, col = generate_random_position()
+        if (row, col) not in obstacles and board[row][col] != "S":  # Avoid placing on ships
+            obstacles.add((row, col))  # Add obstacle location to set
+            board[row][col] = "O"  # Mark obstacle positions with "O"
+    return obstacles  # Return set of obstacle positions
+
+# Function to check if an attack is valid (not already targeted)
+def is_valid_attack(board, row, col):
+    """Check if an attack on (row, col) is valid (not already hit or missed)."""
+    return board[row][col] not in {"X", "M"}  # "X" = hit, "M" = miss
+
+# Function to handle an attack
+def attack(board, row, col, current_ships, current_obstacles):
+    """Handle the attack and return the outcome."""
+    if board[row][col] == "S":  # Hit a ship
+        board[row][col] = "X"  # Mark as hit
+        current_ships.remove((row, col))  # Remove from ships set
+        print("Hit!")
+        return "hit"
+    elif board[row][col] == "O":  # Hit an obstacle
+        board[row][col] = "!"  # Mark as obstacle hit
+        current_obstacles.remove((row, col))  # Remove from obstacles set
+        print("Oh no! You hit an obstacle and lose your next turn.")
+        return "obstacle"
+    else:
+        board[row][col] = "M"  # Missed shot
+        print("Miss!")
+        return "miss"
+
+# Function to get valid player input for attack
+def get_player_attack():
+    """Prompt player for attack coordinates (row, col)."""
+    while True:
+        attack = input("Enter attack coordinates (row,col): ").split(",")
+        try:
+            row, col = int(attack[0]), int(attack[1])  # Convert input to integers
+            if 0 <= row < GRID_SIZE and 0 <= col < GRID_SIZE:
+                return row, col  # Valid input
+            else:
+                print("Coordinates out of bounds. Try again.")
+        except (ValueError, IndexError):  # Handle invalid input format
+            print("Invalid input. Enter coordinates as 'row,col'.")
+
+# Main function to start and play the game
+def play_battleship():
+    """Run the Battleship game."""
+    # Initialize empty boards for each player
+    player1_board = [["." for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]
+    player2_board = [["." for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]
+
+    # Place ships and obstacles
+    player1_ships = place_ships(player1_board)
+    player2_ships = place_ships(player2_board)
+    player1_obstacles = place_obstacles(player1_board)
+    player2_obstacles = place_obstacles(player2_board)
+
+    # Set player names and initial attacking player
+    player1_name = "2246"
+    player2_name = "8499"
+    current_player = player1_name
+    current_board = player2_board
+    current_ships = player2_ships
+    current_obstacles = player2_obstacles
+    skip_turn = {player1_name: False, player2_name: False}  # Track turns to skip due to obstacle
+
+    turn = 1  # Track the number of turns
+    while True:
+        print(f"Turn {turn} - {current_player}'s Attack!")
+        print_board(current_board)  # Show opponent's board (hidden ships/obstacles)
+
+        # Check if player should skip their turn
+        if skip_turn[current_player]:
+            print(f"{current_player} loses this turn due to hitting an obstacle!")
+            skip_turn[current_player] = False  # Reset skip flag
+        else:
+            row, col = get_player_attack()  # Get attack coordinates
+
+            # Validate attack and execute
+            if is_valid_attack(current_board, row, col):
+                result = attack(current_board, row, col, current_ships, current_obstacles)
+                if result == "obstacle":
+                    skip_turn[current_player] = True  # Set flag to skip next turn
+
+                # Check for win condition
+                if not current_ships:
+                    print(f"{current_player} has won the game!")
+                    break
+            else:
+                print("Already targeted that location. Try again.")
+
+        # Switch players and increment turn counter
+        if current_player == player1_name:
+            current_player = player2_name
+            current_board = player1_board
+            current_ships = player1_ships
+            current_obstacles = player1_obstacles
+        else:
+            current_player = player1_name
+            current_board = player2_board
+            current_ships = player2_ships
+            current_obstacles = player2_obstacles
+        turn += 1  # Increment turn
+
+# Start the game
+if __name__ == "__main__":
+    play_battleship()

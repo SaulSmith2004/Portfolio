@@ -1,0 +1,198 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+// Game Constants
+#define GRID_SIZE 5       // Size of the grid set to a 5x5 grid, smaller for simplicity
+#define SHIP_COUNT 5      // Number of ships each player has
+#define OBSTACLE_COUNT 3  // Number of obstacles placed on each board
+
+// Function to print the board with suggestions for better visualization
+void print_board(char board[GRID_SIZE][GRID_SIZE], int reveal) {
+    // Print column headers
+    printf("  0 1 2 3 4\n");  
+    for (int row = 0; row < GRID_SIZE; row++) {
+        printf("%d ", row);
+        for (int col = 0; col < GRID_SIZE; col++) {
+            if ((board[row][col] == 'S' || board[row][col] == 'O') && !reveal) {
+                printf(". ");  // Hide ships ('S') and obstacles ('O') if reveal is false
+            } else {
+                // Show actual cell contents if revealed or if it's a hit/miss
+                if (board[row][col] == 'S') {
+                    printf("S "); // Ship
+                } else if (board[row][col] == 'O') {
+                    printf("O "); // Obstacle
+                } else if (board[row][col] == 'X') {
+                    printf("X "); // Hit
+                } else if (board[row][col] == 'M') {
+                    printf("M "); // Miss
+                } else if (board[row][col] == '!') {
+                    printf("! "); // Obstacle hit
+                } else {
+                    printf(". "); // Empty space
+                }
+            }
+        }
+        printf("\n");
+    }
+    printf("\n");  // Extra newline for readability
+    printf("Legend: S = Ship, O = Obstacle, X = Hit, M = Miss, ! = Obstacle Hit\n");
+}
+
+// Function to generate a random row and column on the grid
+void generate_random_position(int *row, int *col) {
+    *row = rand() % GRID_SIZE;
+    *col = rand() % GRID_SIZE;
+}
+
+// Function to place ships randomly on the board
+void place_ships(char board[GRID_SIZE][GRID_SIZE], int ships[SHIP_COUNT][2]) {
+    int placed = 0;
+    while (placed < SHIP_COUNT) {
+        int row, col;
+        generate_random_position(&row, &col);
+        if (board[row][col] != 'S') {
+            board[row][col] = 'S';  // Mark ship positions with 'S'
+            ships[placed][0] = row;
+            ships[placed][1] = col;
+            placed++;
+        }
+    }
+}
+
+// Function to place obstacles randomly on the board
+void place_obstacles(char board[GRID_SIZE][GRID_SIZE], int obstacles[OBSTACLE_COUNT][2]) {
+    int placed = 0;
+    while (placed < OBSTACLE_COUNT) {
+        int row, col;
+        generate_random_position(&row, &col);
+        if (board[row][col] != 'S' && board[row][col] != 'O') {
+            board[row][col] = 'O';  // Mark obstacle positions with 'O'
+            obstacles[placed][0] = row;
+            obstacles[placed][1] = col;
+            placed++;
+        }
+    }
+}
+
+// Function to check if an attack is valid (not already targeted)
+int is_valid_attack(char board[GRID_SIZE][GRID_SIZE], int row, int col) {
+    return board[row][col] != 'X' && board[row][col] != 'M';  // 'X' = hit, 'M' = miss
+}
+
+// Function to handle an attack
+const char* attack(char board[GRID_SIZE][GRID_SIZE], int row, int col, int ships[SHIP_COUNT][2], int* ship_count, int obstacles[OBSTACLE_COUNT][2], int* obstacle_count) {
+    if (board[row][col] == 'S') {  // Hit a ship
+        board[row][col] = 'X';  // Mark as hit
+        for (int i = 0; i < *ship_count; i++) {
+            if (ships[i][0] == row && ships[i][1] == col) {
+                ships[i][0] = ships[*ship_count - 1][0];
+                ships[i][1] = ships[*ship_count - 1][1];
+                (*ship_count)--;  // Reduce the ship count
+                break;
+            }
+        }
+        printf("Hit!\n");
+        return "hit";
+    } else if (board[row][col] == 'O') {  // Hit an obstacle
+        board[row][col] = '!';  // Mark as obstacle hit
+        for (int i = 0; i < *obstacle_count; i++) {
+            if (obstacles[i][0] == row && obstacles[i][1] == col) {
+                obstacles[i][0] = obstacles[*obstacle_count - 1][0];
+                obstacles[i][1] = obstacles[*obstacle_count - 1][1];
+                (*obstacle_count)--;  // Reduce the obstacle count
+                break;
+            }
+        }
+        printf("Oh no! You hit an obstacle and lose your next turn.\n");
+        return "obstacle";
+    } else {
+        board[row][col] = 'M';  // Missed shot
+        printf("Miss!\n");
+        return "miss";
+    }
+}
+
+// Function to get valid player input for attack
+void get_player_attack(int *row, int *col) {
+    while (1) {
+        printf("Enter attack coordinates (row,col): ");
+        if (scanf("%d,%d", row, col) != 2 || *row < 0 || *row >= GRID_SIZE || *col < 0 || *col >= GRID_SIZE) {
+            printf("Invalid input. Enter coordinates as 'row,col' within the grid bounds.\n");
+            while(getchar() != '\n');  // Clear the input buffer
+        } else {
+            break;
+        }
+    }
+}
+
+// Main function to start and play the game
+int main() {
+    srand(time(NULL));  // Seed the random number generator
+
+    // Initialise empty boards for each player
+    char player1_board[GRID_SIZE][GRID_SIZE] = {{'.'}};
+    char player2_board[GRID_SIZE][GRID_SIZE] = {{'.'}};
+
+    // Arrays to track ship and obstacle positions
+    int player1_ships[SHIP_COUNT][2], player2_ships[SHIP_COUNT][2];
+    int player1_obstacles[OBSTACLE_COUNT][2], player2_obstacles[OBSTACLE_COUNT][2];
+
+    // Place ships and obstacles
+    place_ships(player1_board, player1_ships);
+    place_ships(player2_board, player2_ships);
+    place_obstacles(player1_board, player1_obstacles);
+    place_obstacles(player2_board, player2_obstacles);
+
+    // Set player names and initial attacking player
+    const char* player1_name = "2246";
+    const char* player2_name = "8499";
+    const char* current_player = player1_name;
+    char (*current_board)[GRID_SIZE] = player2_board;
+    int (*current_ships)[2] = player2_ships;
+    int current_ship_count = SHIP_COUNT;
+    int (*current_obstacles)[2] = player2_obstacles;
+    int current_obstacle_count = OBSTACLE_COUNT;
+    int skip_turn[2] = {0, 0};  // Track turns to skip due to obstacle
+
+    int turn = 1;  // Track the number of turns
+    while (1) {
+        printf("Turn %d - %s's Attack!\n", turn, current_player);
+        print_board(current_board, 0);  // Show opponent's board (hidden ships/obstacles)
+
+        // Check if player should skip their turn
+        if (skip_turn[current_player == player1_name]) {
+            printf("%s loses this turn due to hitting an obstacle!\n", current_player);
+            skip_turn[current_player == player1_name] = 0;  // Reset skip flag
+        } else {
+            int row, col;
+            get_player_attack(&row, &col);  // Get attack coordinates
+
+            // Validate attack and execute
+            if (is_valid_attack(current_board, row, col)) {
+                const char* result = attack(current_board, row, col, current_ships, &current_ship_count, current_obstacles, &current_obstacle_count);
+                if (result == "obstacle") {
+                    skip_turn[current_player == player1_name] = 1;  // Set flag to skip next turn
+                }
+            }
+        }
+
+        // Check for win condition
+        if (current_ship_count == 0) {
+            printf("%s wins! All ships have been sunk.\n", current_player);
+            break;
+        }
+
+        // Switch player
+        current_player = (current_player == player1_name) ? player2_name : player1_name;
+        current_board = (current_player == player1_name) ? player1_board : player2_board;
+        current_ships = (current_player == player1_name) ? player1_ships : player2_ships;
+        current_ship_count = (current_player == player1_name) ? SHIP_COUNT : SHIP_COUNT;
+        current_obstacles = (current_player == player1_name) ? player1_obstacles : player2_obstacles;
+        current_obstacle_count = (current_player == player1_name) ? OBSTACLE_COUNT : OBSTACLE_COUNT;
+
+        turn++;
+    }
+
+    return 0;
+}

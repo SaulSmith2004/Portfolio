@@ -1,0 +1,178 @@
+#include <iostream>
+#include <vector>
+#include <ctime>
+#include <cstdlib>
+#include <limits>
+#include <algorithm> // For std::remove
+
+using namespace std;
+
+const int GRID_SIZE = 5; // Size of the board
+typedef pair<int, int> Position;
+
+class Board {
+private:
+    vector<vector<char>> grid;
+    vector<Position> ships;
+    vector<Position> obstacles;
+
+public:
+    Board() : grid(GRID_SIZE, vector<char>(GRID_SIZE, '.')) {}
+
+    // Randomly place elements on the board (ships or obstacles)
+    void placeElements(char symbol, int count, vector<Position>& positions) {
+        while (positions.size() < count) {
+            int row = rand() % GRID_SIZE;
+            int col = rand() % GRID_SIZE;
+            if (grid[row][col] == '.') {
+                grid[row][col] = symbol;
+                positions.emplace_back(row, col);
+            }
+        }
+    }
+
+    void placeShips(int count) { placeElements('S', count, ships); }
+    void placeObstacles(int count) { placeElements('O', count, obstacles); }
+
+    // Check if the attack coordinates are valid
+    bool validAttack(int row, int col) const {
+        return row >= 0 && row < GRID_SIZE && col >= 0 && col < GRID_SIZE && grid[row][col] != 'X' && grid[row][col] != 'M';
+    }
+
+    // Execute an attack and determine the result
+    string attack(int row, int col) {
+        if (grid[row][col] == 'S') {
+            grid[row][col] = 'X';
+            removePosition(ships, row, col);
+            return "hit";
+        } else if (grid[row][col] == 'O') {
+            grid[row][col] = '!';
+            removePosition(obstacles, row, col);
+            return "obstacle";
+        } else {
+            grid[row][col] = 'M';
+            return "miss";
+        }
+    }
+
+    // Display the board, hiding certain elements if "reveal" is false
+    void display(bool reveal) const {
+        cout << "  ";
+        for (int col = 0; col < GRID_SIZE; ++col) cout << col << " ";
+        cout << endl;
+
+        for (int row = 0; row < GRID_SIZE; ++row) {
+            cout << row << " ";
+            for (int col = 0; col < GRID_SIZE; ++col) {
+                if (!reveal && (grid[row][col] == 'S' || grid[row][col] == 'O')) {
+                    cout << ". ";
+                } else {
+                    cout << grid[row][col] << " ";
+                }
+            }
+            cout << endl;
+        }
+    }
+
+    bool hasShips() const { return !ships.empty(); }
+
+private:
+    // Remove a position from a vector of positions
+    void removePosition(vector<Position>& positions, int row, int col) {
+        positions.erase(remove(positions.begin(), positions.end(), make_pair(row, col)), positions.end());
+    }
+};
+
+class Player {
+public:
+    string name;
+    Board board;
+    bool skipTurn;
+
+    Player(string playerName) : name(move(playerName)), skipTurn(false) {}
+
+    void setupBoard() {
+        board.placeShips(5); // Place 5 ships
+        board.placeObstacles(3); // Place 3 obstacles
+    }
+
+    bool lost() const { return !board.hasShips(); }
+};
+
+class Game {
+private:
+    Player player1;
+    Player player2;
+    Player* current;
+    Player* opponent;
+
+public:
+    Game(const string& name1, const string& name2)
+        : player1(name1), player2(name2), current(&player1), opponent(&player2) {}
+
+    void setup() {
+        srand(static_cast<unsigned>(time(nullptr))); // Seed RNG
+        player1.setupBoard();
+        player2.setupBoard();
+    }
+
+    void start() {
+        int turn = 1;
+        while (true) {
+            cout << "\nTurn " << turn << " - " << current->name << "'s turn\n";
+            opponent->board.display(false);
+
+            if (current->skipTurn) {
+                cout << current->name << " skips their turn due to hitting an obstacle!\n";
+                current->skipTurn = false;
+            } else {
+                processTurn();
+            }
+
+            if (opponent->lost()) {
+                cout << current->name << " wins! All Opponent ships are sunk. Better Luck Next Time!\n";
+                break;
+            }
+
+            swapPlayers();
+            ++turn;
+        }
+    }
+
+private:
+    void processTurn() {
+        int row, col;
+        while (true) {
+            cout << "Enter attack coordinates (row,col): ";
+            char comma;
+            cin >> row >> comma >> col;
+            if (cin.fail() || comma != ',' || !opponent->board.validAttack(row, col)) {
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                cout << "Invalid input. Please Try Again.\n";
+            } else {
+                break;
+            }
+        }
+
+        string result = opponent->board.attack(row, col);
+        if (result == "hit") {
+            cout << "It's a hit!\n";
+        } else if (result == "obstacle") {
+            cout << "You hit an obstacle! You'll have to skip your next turn.\n";
+            current->skipTurn = true;
+        } else {
+            cout << "Missed.\n";
+        }
+    }
+
+    void swapPlayers() { swap(current, opponent); }
+};
+
+int main() {
+    cout << "Welcome to Saul's Battleship Game!\n";
+    Game game("2246", "8499");
+    game.setup();
+    game.start();
+    return 0;
+}

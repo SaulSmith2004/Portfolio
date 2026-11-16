@@ -1,0 +1,43 @@
+  /* CSS Page for a Successful Payment */
+  
+  /* Controls the font and text within the Succesful Payment Page */
+  *{
+    font-family: 'Poppins', sans-serif;
+    margin:0; padding:0;
+    outline: none; border:none;
+    text-transform: capitalize;
+    transition: all .2s linear;
+    color: black;
+    font-weight:bold;
+    font-size: 20px;
+  }
+
+  /* Controls where the text is within the page (within a container) */
+  .container{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding:25px;
+    min-height: 100vh;
+    background: linear-gradient(90deg, teal 60%,teal 40%);
+    
+  }
+
+  /* Redirects Customer to Home Screen */
+  .home-btn{
+    width: 100%;
+    padding:12px;
+    font-size: 30px;
+    background: teal;
+    color:#fff;
+    margin-top: 5px;
+    margin-left: 30%;
+    cursor: pointer;
+    color: black;
+    text-decoration: none;
+  }
+
+  /* Turns the button into a different colour shade when hovered over */
+  .container .home-btn:hover{
+  background: #27ae60;
+  }

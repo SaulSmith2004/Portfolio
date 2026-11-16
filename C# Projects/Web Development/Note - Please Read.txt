@@ -1,0 +1,6 @@
+This Assignment was created by Saul Smith - 22468499
+
+Note: I attempted to combine all CSS files multiple times but this would
+negatively impact other parts of my work, this file structure is not as 
+specified in assignment spec but I have tried to replicate as closely as possible
+without compromising my website and assignment as a whole. 

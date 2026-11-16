@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title> Payment Page </title>
+    <!-- css file link  -->
+    <link rel="stylesheet" href="payment.css">
+
+</head>
+<body>
+
+    <!-- Contains the payment box - accepts all necessary info -->
+<div class="container">
+
+    <form action="">
+
+        <div class="row">
+
+            <div class="col">
+
+                <h3 class="title">Billing Address</h3>
+
+                <div class="inputBox">
+                    <span>Full Name :</span>
+                    <input type="text" placeholder="John Doe">
+                </div>
+                <div class="inputBox">
+                    <span>Email Address:</span>
+                    <input type="email" placeholder="email@example.com">
+                </div>
+                <div class="inputBox">
+                    <span>Address :</span>
+                    <input type="text" placeholder="Street - Locality">
+                </div>
+                <div class="inputBox">
+                    <span>City :</span>
+                    <input type="text" placeholder="Manchester">
+                </div>
+
+                <div class="flex">
+                    <div class="inputBox">
+                        <span>Country :</span>
+                        <input type="text" placeholder="England">
+                    </div>
+                    <div class="inputBox">
+                        <span>Postcode :</span>
+                        <input type="text" placeholder="AA1 1AA">
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="col">
+
+                <h3 class="title">Payment</h3>
+
+                <div class="inputBox">
+                    <span>Cards Accepted :</span>
+                    <img src="images/card_img.png" alt="">
+                </div>
+
+                <div class="inputBox"> 
+                    <id>Name On Card</id>
+                    <input type="text" placeholder="Mr John Doe">
+                </div>
+
+                <div class="inputBox">
+                    <id>Credit Card Number</id>
+                    <input type="number" input id="ccn" id="n" placeholder="xxxx xxxx xxxx xxxx">
+                </div>
+
+                <div class="inputBox">
+                    <span>Expiry Month :</span> 
+                    <input type="text" id="m" placeholder="01">
+                </div>
+
+                <div class="flex">
+                    <div class="inputBox">
+                        <span>Expiry Year :</span>
+                        <input type="text" id="y" placeholder="2023">
+                    </div>
+
+                    <div class="inputBox">
+                        <id>CVV</id>
+                        <input type="text" id="cvv" placeholder="123">
+                    </div>
+                </div>
+
+            </div>
+    
+        </div>
+        <!-- Submits all info to the JS -->
+        <input type="submit" id="submit" value="Proceed to Checkout" class="submit-btn">
+
+    </form>
+
+</div>    
+    <script src="script.js"></script>
+</body>
+</html>
